@@ -22,7 +22,27 @@
 //         "type" : "Database Compaction"
 //       }
 //     ]
-(function($) {
+;(function ( name, definition ) {
+    var hasDefine = typeof define === 'function'
+
+    if ( hasDefine ) { // AMD Module
+        define(['jquery'], function($) { return definition($) });
+    } else { // Assign to common namespaces or simply the global object (window)
+        // account for for flat-file/global module extensions
+        var obj = null;
+        var namespaces = name.split(".");
+        var scope = (this.jQuery || this.zepto || this.$);
+        for (var i = 0; i < namespaces.length; i++) {
+            var packageName = namespaces[i];
+            if (obj && i == namespaces.length - 1) {
+                obj[packageName] = definition(scope);
+            } else if (typeof scope[packageName] === "undefined") {
+                scope[packageName] = {};
+            }
+            obj = scope[packageName];
+        }
+    }
+})("couch", function ($) {
 
   $.couch = $.couch || {};
 
@@ -101,7 +121,7 @@
           } else if (options.error) {
             options.error(req.status, resp.error, resp.reason);
           } else {
-            alert("An error occurred getting session info: " + resp.reason);
+            console.error("An error occurred getting session info: " + resp.reason);
           }
         }
       });
@@ -132,7 +152,7 @@
     // Populates a user doc with a new password.
     prepareUserDoc: function(user_doc, new_password) {
       if (typeof hex_sha1 == "undefined") {
-        alert("creating a user doc requires sha1.js to be loaded in the page");
+        console.error("creating a user doc requires sha1.js to be loaded in the page");
         return;
       }
       var user_prefix = "org.couchdb.user:";
@@ -166,7 +186,7 @@
           } else if (options.error) {
             options.error(req.status, resp.error, resp.reason);
           } else {
-            alert("An error occurred logging in: " + resp.reason);
+            console.error("An error occurred logging in: " + resp.reason);
           }
         }
       });
@@ -189,7 +209,7 @@
           } else if (options.error) {
             options.error(req.status, resp.error, resp.reason);
           } else {
-            alert("An error occurred logging out: " + resp.reason);
+            console.error("An error occurred logging out: " + resp.reason);
           }
         }
       });
@@ -211,7 +231,7 @@
             rawDocs[doc._id].rev == doc._rev) {
           // todo: can we use commonjs require here?
           if (typeof Base64 == "undefined") {
-            alert("please include /_utils/script/base64.js in the page for " +
+            console.error("please include /_utils/script/base64.js in the page for " +
                   "base64 support");
             return false;
           } else {
@@ -434,7 +454,7 @@
               }
             });
           } else {
-            alert("Please provide an eachApp function for allApps()");
+            console.error("Please provide an eachApp function for allApps()");
           }
         },
 
@@ -510,7 +530,7 @@
               } else if (options.error) {
                 options.error(req.status, resp.error, resp.reason);
               } else {
-                alert("The document could not be saved: " + resp.reason);
+                console.error("The document could not be saved: " + resp.reason);
               }
             }
           });
@@ -574,7 +594,7 @@
               } else if (options.error) {
                 options.error(req.status, resp.error, resp.reason);
               } else {
-                alert("The document could not be copied: " + resp.reason);
+                console.error("The document could not be copied: " + resp.reason);
               }
             }
           });
@@ -657,7 +677,7 @@
               } else if (options.error) {
                 options.error(req.status, resp.error, resp.reason);
               } else {
-                alert("An error occurred getting session info: " + resp.reason);
+                console.error("An error occurred getting session info: " + resp.reason);
               }
             },
 	    url: this.uri + '_design/' + ddoc_fun[0] +
@@ -788,7 +808,7 @@
           if (options.error) {
             options.error(req.status, req, e);
           } else {
-            alert(errorMessage + ": " + e);
+            console.error(errorMessage + ": " + e);
           }
           return;
         }
@@ -802,7 +822,7 @@
           options.error(req.status, resp && resp.error ||
                         errorMessage, resp && resp.reason || "no response");
         } else {
-          alert(errorMessage + ": " + resp.reason);
+          console.error(errorMessage + ": " + resp.reason);
         }
       }
     }, obj), ajaxOptions));
@@ -842,5 +862,5 @@
   function toJSON(obj) {
     return obj !== null ? JSON.stringify(obj) : null;
   }
-
-})(jQuery);
+  return $;
+});
