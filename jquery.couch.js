@@ -317,10 +317,12 @@
               onChange : function(fun) {
                 listeners.push(fun);
               },
-              // Stop subscribing to the changes feed
+              // Stop subscribing to the changes feed and close the connection
               stop : function() {
                 active = false;
-              }
+                if (this._handler) this._handler.abort();
+              },
+              _handler : null
             };
 
           // call each listener when there is a change
@@ -353,7 +355,7 @@
               feed : "longpoll",
               since : since
             });
-            ajax(
+            promise._handler = ajax(
               {url: db.uri + "_changes"+encodeOptions(opts)},
               options,
               "Error connecting to "+db.uri+"/_changes."
