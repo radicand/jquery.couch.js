@@ -783,8 +783,8 @@
   });
 
   function ajax(obj, options, errorMessage, ajaxOptions) {
-
-    var defaultAjaxOpts = {
+    var timeStart,
+        defaultAjaxOpts = {
       contentType: "application/json",
       headers:{"Accept": "application/json"}
     };
@@ -792,8 +792,9 @@
     options = $.extend({successStatus: 200}, options);
     ajaxOptions = $.extend(defaultAjaxOpts, ajaxOptions);
     errorMessage = errorMessage || "Unknown error";
+    timeStart = (new Date()).getTime();
     return $.ajax($.extend($.extend({
-      type: "GET", dataType: "json",
+      type: "GET", dataType: "json", cache : !$.browser.msie,
       beforeSend: function(xhr){
         if(ajaxOptions && ajaxOptions.headers){
           for (var header in ajaxOptions.headers){
@@ -802,6 +803,7 @@
         }
       },
       complete: function(req) {
+        var reqDuration = (new Date()).getTime() - timeStart;
         try {
           var resp = $.parseJSON(req.responseText);
         } catch(e) {
@@ -816,11 +818,12 @@
           options.ajaxStart(resp);
         }
         if (req.status == options.successStatus) {
-          if (options.beforeSuccess) options.beforeSuccess(req, resp);
-          if (options.success) options.success(resp);
+          if (options.beforeSuccess) options.beforeSuccess(req, resp, reqDuration);
+          if (options.success) options.success(resp, reqDuration);
         } else if (options.error) {
           options.error(req.status, resp && resp.error ||
-                        errorMessage, resp && resp.reason || "no response");
+                        errorMessage, resp && resp.reason || "no response",
+                        reqDuration);
         } else {
           console.error(errorMessage + ": " + resp.reason);
         }
