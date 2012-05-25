@@ -636,8 +636,9 @@
         // Fetch a _list view output, you can specify a list of
         // <code>keys</code> in the options object to recieve only those keys.
         list: function(list, view, options, ajaxOptions) {
+          // ajaxOptions is deprecated and should not be used
           var list = list.split('/');
-          var options = options || {};
+          var options = $.extend({}, options, ajaxOptions); // backward compat
           var type = 'GET';
           var data = null;
           if (options['keys']) {
@@ -652,7 +653,7 @@
               url: this.uri + '_design/' + list[0] +
                    '/_list/' + list[1] + '/' + view + encodeOptions(options)
               },
-              ajaxOptions, 'An error occured accessing the list'
+              options, 'An error occured accessing the list'
           );
         },
 
@@ -795,6 +796,7 @@
     timeStart = (new Date()).getTime();
     return $.ajax($.extend($.extend({
       type: "GET", dataType: "json", cache : !$.browser.msie,
+      timeout: 3000,
       beforeSend: function(xhr){
         if(ajaxOptions && ajaxOptions.headers){
           for (var header in ajaxOptions.headers){

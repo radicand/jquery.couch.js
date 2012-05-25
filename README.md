@@ -1,0 +1,1 @@
+Improvement/bugfix fork of daleharvey/jquery.couch.js, which appears to no longer be maintained.
