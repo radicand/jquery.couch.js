@@ -342,38 +342,46 @@
                 active = false;
                 if (this._handler) this._handler.abort();
               },
+              resume : function () {
+                if (!active){
+                  active = true;
+                  getChangesSince();
+                }
+              },
               _handler : null
             };
 
           // call each listener when there is a change
           function triggerListeners(resp) {
             $.each(listeners, function() {
-              this(resp);
+              // add safety!
+              if (this) {
+                this(resp);
+              }
             });
           };
 
           // when there is a change, call any listeners, then check for
           // another change
           options.success = function(resp) {
-            timeout = 100;
             if (active) {
               since = resp.last_seq;
               triggerListeners(resp);
-              getChangesSince();
+              setTimeout(getChangesSince, timeout);
             };
           };
           options.error = function() {
             if (active) {
               setTimeout(getChangesSince, timeout);
-              timeout = timeout * 2;
+              timeout = 1500; //timeout * 2;
             }
           };
 
           // actually make the changes request
           function getChangesSince() {
             var opts = $.extend({heartbeat : 10 * 1000}, options, {
-              feed : "longpoll",
-              since : since
+              since : since,
+              feed : "longpoll"
             });
             promise._handler = ajax(
               {url: db.uri + "_changes"+encodeOptions(opts)},
@@ -636,9 +644,8 @@
         // Fetch a _list view output, you can specify a list of
         // <code>keys</code> in the options object to recieve only those keys.
         list: function(list, view, options, ajaxOptions) {
-          // ajaxOptions is deprecated and should not be used
           var list = list.split('/');
-          var options = $.extend({}, options, ajaxOptions); // backward compat
+          var options = options || {};
           var type = 'GET';
           var data = null;
           if (options['keys']) {
@@ -657,17 +664,17 @@
           );
         },
 
-	// Execute an update function for a given document.
-	updateDoc: function(updateFun, doc_id, options, ajaxOptions) {
+  // Execute an update function for a given document.
+  updateDoc: function(updateFun, doc_id, options, ajaxOptions) {
 
-	  var ddoc_fun = updateFun.split('/');
-	  var options = options || {};
-	  var type = 'PUT';
+    var ddoc_fun = updateFun.split('/');
+    var options = options || {};
+    var type = 'PUT';
           var data = null;
 
-	  return $.ajax({
-	    type: type,
-	    data: data,
+    return $.ajax({
+      type: type,
+      data: data,
             beforeSend: function(xhr) {
               xhr.setRequestHeader('Accept', '*/*');
             },
@@ -681,10 +688,10 @@
                 console.error("An error occurred getting session info: " + resp.reason);
               }
             },
-	    url: this.uri + '_design/' + ddoc_fun[0] +
-	      '/_update/' + ddoc_fun[1] + '/' + doc_id + encodeOptions(options)
-	  });
-	},
+      url: this.uri + '_design/' + ddoc_fun[0] +
+        '/_update/' + ddoc_fun[1] + '/' + doc_id + encodeOptions(options)
+    });
+  },
 
         // Executes the specified view-name from the specified design-doc
         // design document, you can specify a list of <code>keys</code>
@@ -796,7 +803,6 @@
     timeStart = (new Date()).getTime();
     return $.ajax($.extend($.extend({
       type: "GET", dataType: "json", cache : !$.browser.msie,
-      timeout: 3000,
       beforeSend: function(xhr){
         if(ajaxOptions && ajaxOptions.headers){
           for (var header in ajaxOptions.headers){
