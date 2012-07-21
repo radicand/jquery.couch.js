@@ -330,7 +330,7 @@
 
           options = options || {};
           // set up the promise object within a closure for this handler
-          var timeout = 100, db = this, active = true,
+          var timeout = 1000, db = this, active = true,
             listeners = [],
             promise = {
               // Add a listener callback
@@ -381,7 +381,7 @@
           function getChangesSince() {
             var opts = $.extend({heartbeat : 10 * 1000}, options, {
               since : since,
-              feed : "longpoll"
+              //feed : "longpoll"
             });
             promise._handler = ajax(
               {url: db.uri + "_changes"+encodeOptions(opts)},
